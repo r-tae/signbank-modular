@@ -14,7 +14,7 @@ home_directory="$(eval echo ~${USERNAME})"
 mkdir --parents "${home_directory}/.ssh"
 cp /root/.ssh/authorized_keys "${home_directory}/.ssh"
 chmod 0700 "${home_directory}/.ssh"
-chmod 0600 "${home_directory}/.ssh"
+chmod 0600 "${home_directory}/.ssh/authorized_keys"
 chown --recursive "${USERNAME}":"${USERNAME}" "${home_directory}/.ssh"
 
 # Disable root SSH login with password
@@ -24,4 +24,3 @@ if sshd -t -q; then systemctl restart sshd; fi
 # Install docker
 snap install docker
 apt install -y nginx-light
-
