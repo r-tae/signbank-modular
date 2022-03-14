@@ -18,9 +18,6 @@ jobs:
     - name: Checkout main
       uses: actions/checkout@v2
 
-    - name: Update SHA
-      run: echo $GITHUB_SHA > $GITHUB_WORKSPACE/site/_meta
-
     - name: Create TAG variable
       run: |
         TAG=$(echo $GITHUB_SHA | head -c7)
