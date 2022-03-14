@@ -21,8 +21,13 @@ jobs:
     - name: Update SHA
       run: echo $GITHUB_SHA > $GITHUB_WORKSPACE/site/_meta
 
+    - name: Create TAG variable
+      run: |
+        TAG=$(echo $GITHUB_SHA | head -c7)
+        echo "::set-env name=TAG::$TAG"
+
     - name: Build container image
-      run: docker build -t registry.digitalocean.com/signbank/signbank:$(echo $GITHUB_SHA | head -c7) .
+      run: docker build -t registry.digitalocean.com/signbank/signbank:${{ env.TAG }} .
 
     - name: Install doctl
       uses: digitalocean/action-doctl@v2
@@ -35,28 +40,18 @@ jobs:
     - name: Push image to DigitalOcean Container Registry
       run: docker push registry.digitalocean.com/asb/static-example:$(echo $GITHUB_SHA | head -c7)
 
+
     - name: Update deployment file
-      run: TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|registry.digitalocean.com/asb/static-example:'${TAG}'|' $GITHUB_WORKSPACE/config/deployment.yml
+      run: sed -i 's|<IMAGE>|registry.digitalocean.com/asb/static-example:'${{ env.TAG }}'|' $GITHUB_WORKSPACE/config/deployment.yml
 
     - name: Create DigitalOcean droplet
       run: |
         DROPLET_DETAILS=$(doctl compute droplet create test \
         --image ubuntu-20-04-x64 --size s-1vcpu-1gb --region sgp1 \
-        --wait --ssh-keys <insert fingerprint> --user-data-file droplet-userdata.sh \
+        --wait --ssh-keys ${{ secrets.WORKFLOW_SSH_FINGERPRINT }} --user-data-file droplet-userdata.sh \
         --enable-ipv6 --enable-monitoring --enable-private-networking --output json)
         DROPLET_ID=$(echo $DROPLET_DETAILS | jq ".[0].id")
-        doctl compute floating-ip-action assign $FLOATING_IP
-
-    - name: SCP deploy.sh script onto droplet
-      # You may pin to the exact commit or the version.
-      # uses: appleboy/scp-action@b476d5806f2a4c1ed5902a87fa91b0623cac7258
-      uses: appleboy/scp-action@v0.0.1
-      with:
-        host: ${{ FLOATING_IP }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.PRIVATE_KEY }}
-        source: "${GITHUB_WORKSPACE}/deploy.sh"
-        target: "~"
+        doctl compute floating-ip-action assign ${{ env.FLOATING_IP }}
     
     - name: Run deploy.sh
       uses: appleboy/ssh-action@v0.1.4
@@ -64,4 +59,6 @@ jobs:
         host: ${{ FLOATING_IP }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.PRIVATE_KEY }}
-        script: ./deploy.sh
+        script: |
+          docker pull registry.digitalocean.com/signbank/signbank:${{ env.TAG }}
+          nginx -c ~/nginx.conf
