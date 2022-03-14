@@ -69,4 +69,5 @@ jobs:
             }
           }" >> nginx.conf
           nginx -c ~/nginx.conf
+          docker run --detach --env-file env.prod -p 127.0.0.1:8000:8000 --name auslan registry.digitalocean.com/signbank/signbank:${{ env.TAG }} gunicorn --bind=0.0.0.0 signbank.wsgi
 
