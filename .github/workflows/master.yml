@@ -37,11 +37,7 @@ jobs:
       run: doctl registry login --expiry-seconds 600
 
     - name: Push image to DigitalOcean Container Registry
-      run: docker push registry.digitalocean.com/asb/static-example:$(echo $GITHUB_SHA | head -c7)
-
-
-    - name: Update deployment file
-      run: sed -i 's|<IMAGE>|registry.digitalocean.com/asb/static-example:'${{ env.TAG }}'|' $GITHUB_WORKSPACE/config/deployment.yml
+      run: docker push registry.digitalocean.com/signbank/signbank:${{ env.TAG }}
 
     - name: Create DigitalOcean droplet
       run: |
