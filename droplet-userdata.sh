@@ -9,6 +9,10 @@ useradd --create-home --shell "/bin/bash" --groups sudo "${USERNAME}"
 passwd --delete "${USERNAME}"
 chage --lastday 0 "${USERNAME}"
 
+groupadd docker
+usermod -aG docker "${USERNAME}"
+
+
 # Create SSH directory for sudo user and move keys over
 home_directory="$(eval echo ~${USERNAME})"
 mkdir --parents "${home_directory}/.ssh"
@@ -24,3 +28,5 @@ if sshd -t -q; then systemctl restart sshd; fi
 # Install docker
 snap install docker
 apt install -y nginx-light
+
+sudo systemctl start docker
