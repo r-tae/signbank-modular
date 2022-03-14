@@ -21,7 +21,7 @@ jobs:
     - name: Create TAG variable
       run: |
         TAG=$(echo $GITHUB_SHA | head -c7)
-        echo "::set-env name=TAG::$TAG"
+        echo "TAG=${TAG}" >> $GITHUB_ENV
 
     - name: Build container image
       run: docker build -t registry.digitalocean.com/signbank/signbank:${{ env.TAG }} .
