@@ -46,7 +46,7 @@ jobs:
         --wait --ssh-keys ${{ secrets.WORKFLOW_SSH_FINGERPRINT }} --user-data-file droplet-userdata.sh \
         --enable-ipv6 --enable-monitoring --enable-private-networking --output json)
         DROPLET_ID=$(echo $DROPLET_DETAILS | jq ".[0].id")
-        doctl compute floating-ip-action assign ${{ env.FLOATING_IP }}
+        doctl compute floating-ip-action assign ${{ env.FLOATING_IP }} $DROPLET_ID
     
     - name: Run deploy.sh
       uses: appleboy/ssh-action@v0.1.4
