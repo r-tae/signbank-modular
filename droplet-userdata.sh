@@ -3,11 +3,12 @@ set -euo pipefail
 
 USERNAME=user # TODO: rename this
 
-# TODO: check if we want this
+# TODO: check if we can expire password without causing the deploys to
+# fail complaining about not being able to reset password without a TTY
 # Create user and immediately expire password to force a change on login
 useradd --create-home --shell "/bin/bash" --groups sudo "${USERNAME}"
-passwd --delete "${USERNAME}"
-chage --lastday 0 "${USERNAME}"
+# passwd --delete "${USERNAME}"
+# chage --lastday 0 "${USERNAME}"
 
 groupadd docker
 usermod -aG docker "${USERNAME}"

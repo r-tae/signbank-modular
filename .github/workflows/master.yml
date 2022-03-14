@@ -28,6 +28,9 @@ jobs:
         TAG=$(echo $GITHUB_SHA | head -c7)
         echo "TAG=${TAG}" >> $GITHUB_ENV
 
+    - name: Create env.prod
+      run: echo "${{ env.ENV_PROD_FILE }}" >> env.prod
+
     - name: Build container image
       run: docker build -t registry.digitalocean.com/signbank/signbank:${{ env.TAG }} .
 
