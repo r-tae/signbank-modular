@@ -28,9 +28,6 @@ jobs:
         TAG=$(echo $GITHUB_SHA | head -c7)
         echo "TAG=${TAG}" >> $GITHUB_ENV
 
-    - name: Create env.prod
-      run: echo "${{ env.ENV_PROD_FILE }}" >> env.prod
-
     - name: Build container image
       run: docker build -t registry.digitalocean.com/signbank/signbank:${{ env.TAG }} .
 
@@ -62,12 +59,30 @@ jobs:
         key: ${{ secrets.PRIVATE_KEY }}
         script: |
           docker pull registry.digitalocean.com/signbank/signbank:${{ env.TAG }}
-          echo "server {
-            listen 80;
-            location / {
-              proxy_pass 127.0.0.1:8000;
+          echo "
+          http {
+            include /etc/nginx/mime.types; 
+            default_type application/octet-stream; 
+
+            server {
+                listen 443 ssl;
+                listen 80 default_server;
+                ssl_certificate /etc/nginx/ssl/proxy.pem;
+                ssl_certificate_key /etc/nginx/ssl/proxy.key;
+                ssl_session_cache shared:SSL:1m;
+                ssl_session_timeout 2m;
+
+                location / {
+                    proxy_pass 127.0.0.1:8000;
+                    proxy_set_header Host $host;
+                    proxy_redirect off;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto https;
+                }
             }
           }" >> nginx.conf
           nginx -c ~/nginx.conf
+          echo "${{ env.ENV_PROD_FILE }}" >> env.prod
           docker run --detach --env-file env.prod -p 127.0.0.1:8000:8000 --name auslan registry.digitalocean.com/signbank/signbank:${{ env.TAG }} gunicorn --bind=0.0.0.0 signbank.wsgi
 
