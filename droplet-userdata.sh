@@ -6,7 +6,7 @@ USERNAME=user # TODO: rename this
 # TODO: check if we can expire password without causing the deploys to
 # fail complaining about not being able to reset password without a TTY
 # Create user and immediately expire password to force a change on login
-useradd --create-home --disabled-password --shell "/bin/bash" --groups sudo "${USERNAME}"
+useradd --create-home --shell "/bin/bash" --groups sudo -p $(openssl rand -base64 10) "${USERNAME}"
 # passwd --delete "${USERNAME}"
 # chage --lastday 0 "${USERNAME}"
 
